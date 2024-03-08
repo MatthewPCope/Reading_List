@@ -1,29 +1,25 @@
-import { useEffect, useState } from 'react'
+import  { useCollection } from '../hooks/useCollection'
 import BookList from '../components/BookList'
 import BookForm from '../components/BookForm'
-import { db } from '../firebase/config'
-import { collection, getDocs } from 'firebase/firestore'
+import { useAuthContext } from '../hooks/useAuthContext'
+
+
 
 export default function Home() {
-    const [books, setBooks] = useState(null)
 
-    useEffect(() => {
-        const ref = collection(db, 'books')
-
-        getDocs(ref)
-            .then((snapshot) => {
-                let results = []
-                snapshot.docs.forEach(doc => {
-                    results.push({id: doc.id, ...doc.data()})
-                })
-                setBooks(results)
-            })
-    }, [])
+    const { user } = useAuthContext()
+    const { documents: books, error} = useCollection(
+        "books",
+        ["uid", '==', user.uid],
+        ["createdAt", "desc"]
+    )
+    
 
     return (
         <div className="App">
+            {error && <p>{error}</p>}
         {books && <BookList books={books} />}
-        <BookForm />
+        <BookForm uid={user.uid}/>
         </div>
     );
 }
